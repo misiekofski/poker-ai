@@ -54,9 +54,40 @@
             </header>
 
             <div class="table">
-                <!-- Pozycje graczy wokół stołu -->
+                <!-- Pozycje graczy wokół stołu (multiplayer) -->
                 <div class="players-container" id="players-container">
                     <!-- Gracze będą dodawani dynamicznie -->
+                </div>
+
+                <!-- Gracze single-player (ukryte w trybie multiplayer) -->
+                <div class="single-player-elements">
+                    <!-- Karty AI -->
+                    <div class="player ai-player">
+                        <h3>Komputer</h3>
+                        <div class="player-info">
+                            <div class="chips">Żetony: $<span id="ai-chips">1000</span></div>
+                            <div class="bet">Stawka: $<span id="ai-bet">0</span></div>
+                            <div class="action" id="ai-action"></div>
+                        </div>
+                        <div class="cards" id="ai-cards">
+                            <div class="card back"></div>
+                            <div class="card back"></div>
+                        </div>
+                    </div>
+
+                    <!-- Karty gracza -->
+                    <div class="player human-player">
+                        <h3>Ty</h3>
+                        <div class="player-info">
+                            <div class="chips">Żetony: $<span id="player-chips">1000</span></div>
+                            <div class="bet">Stawka: $<span id="player-bet">0</span></div>
+                        </div>
+                        <div class="cards" id="player-cards">
+                            <div class="card"></div>
+                            <div class="card"></div>
+                        </div>
+                        <div class="hand-strength" id="hand-strength"></div>
+                    </div>
                 </div>
 
                 <!-- Karty wspólne -->
@@ -87,6 +118,11 @@
 
             <!-- Status gry -->
             <div class="game-status" id="game-status"></div>
+
+            <!-- Przycisk nowej gry (single-player) -->
+            <div class="new-game single-player-elements">
+                <button id="new-game-btn" class="btn btn-new-game">Nowa Gra</button>
+            </div>
         </div>
 
         <!-- Wyniki -->
@@ -101,7 +137,37 @@
         </div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Próba załadowania Socket.IO z różnych źródeł
+        (function() {
+            const scripts = [
+                '/socket.io/socket.io.js',
+                'http://localhost:3000/socket.io/socket.io.js',
+                'https://cdn.socket.io/4.7.2/socket.io.min.js'
+            ];
+            
+            let loaded = false;
+            let scriptIndex = 0;
+            
+            function loadNextScript() {
+                if (scriptIndex >= scripts.length || loaded) return;
+                
+                const script = document.createElement('script');
+                script.src = scripts[scriptIndex];
+                script.onload = function() {
+                    loaded = true;
+                    console.log('Socket.IO załadowano z:', scripts[scriptIndex]);
+                };
+                script.onerror = function() {
+                    scriptIndex++;
+                    setTimeout(loadNextScript, 100);
+                };
+                document.head.appendChild(script);
+            }
+            
+            loadNextScript();
+        })();
+    </script>
     <script src="script.js"></script>
 </body>
 </html>

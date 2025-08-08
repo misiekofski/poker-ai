@@ -1,0 +1,15 @@
+# Static site deployment configuration for GitHub Pages
+include:
+  - index.html
+  - style.css
+  - script.js
+  - README.md
+  - .nojekyll
+
+exclude:
+  - server.js
+  - package.json
+  - package-lock.json
+  - node_modules/
+  - .github/
+  - .gitignore

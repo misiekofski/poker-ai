@@ -1,5 +1,6 @@
 class MultiplayerPokerGame {
     constructor() {
+        console.log('MultiplayerPokerGame constructor uruchomiony');
         this.socket = null;
         this.isConnected = false;
         this.isMultiplayer = false;
@@ -9,45 +10,88 @@ class MultiplayerPokerGame {
         this.gameState = null;
         this.singlePlayerGame = null;
         
+        console.log('Inicjalizacja UI...');
         this.initializeUI();
+        console.log('Bindowanie eventów...');
         this.bindEvents();
+        console.log('Konstruktor zakończony');
     }
 
     initializeUI() {
+        console.log('Pokazywanie menu połączenia...');
         this.showConnectionMenu();
     }
 
     showConnectionMenu() {
-        document.getElementById('connection-menu').style.display = 'flex';
-        document.getElementById('waiting-room').style.display = 'none';
-        document.getElementById('main-game').style.display = 'none';
+        console.log('showConnectionMenu wywołany');
+        const connectionMenu = document.getElementById('connection-menu');
+        const waitingRoom = document.getElementById('waiting-room');
+        const mainGame = document.getElementById('main-game');
+        
+        if (!connectionMenu) {
+            console.error('Nie można znaleźć connection-menu element!');
+            return;
+        }
+        
+        console.log('Pokazywanie menu połączenia');
+        connectionMenu.style.display = 'flex';
+        if (waitingRoom) waitingRoom.style.display = 'none';
+        if (mainGame) mainGame.style.display = 'none';
     }
 
     bindEvents() {
-        document.getElementById('join-room-btn').addEventListener('click', () => {
+        // Sprawdź czy elementy istnieją przed dodaniem event listenerów
+        const joinRoomBtn = document.getElementById('join-room-btn');
+        const singlePlayerBtn = document.getElementById('single-player-btn');
+        
+        if (!joinRoomBtn || !singlePlayerBtn) {
+            console.error('Nie można znaleźć przycisków w HTML!');
+            return;
+        }
+        
+        console.log('Bindowanie eventów...');
+        
+        joinRoomBtn.addEventListener('click', () => {
+            console.log('Kliknięto multiplayer button');
             this.joinMultiplayerRoom();
         });
 
-        document.getElementById('single-player-btn').addEventListener('click', () => {
+        singlePlayerBtn.addEventListener('click', () => {
+            console.log('Kliknięto single-player button');
             this.startSinglePlayerGame();
         });
 
-        document.getElementById('start-game-btn').addEventListener('click', () => {
-            this.startMultiplayerGame();
-        });
+        const startGameBtn = document.getElementById('start-game-btn');
+        if (startGameBtn) {
+            startGameBtn.addEventListener('click', () => {
+                this.startMultiplayerGame();
+            });
+        }
 
-        document.getElementById('leave-room-btn').addEventListener('click', () => {
-            this.leaveRoom();
-        });
+        const leaveRoomBtn = document.getElementById('leave-room-btn');
+        if (leaveRoomBtn) {
+            leaveRoomBtn.addEventListener('click', () => {
+                this.leaveRoom();
+            });
+        }
 
-        document.getElementById('fold-btn').addEventListener('click', () => this.playerAction('fold'));
-        document.getElementById('check-btn').addEventListener('click', () => this.playerAction('check'));
-        document.getElementById('call-btn').addEventListener('click', () => this.playerAction('call'));
-        document.getElementById('bet-btn').addEventListener('click', () => {
-            const amount = parseInt(document.getElementById('bet-input').value) || 0;
-            if (amount > 0) this.playerAction('bet', amount);
-        });
-        document.getElementById('all-in-btn').addEventListener('click', () => this.playerAction('all-in'));
+        // Game controls
+        const foldBtn = document.getElementById('fold-btn');
+        const checkBtn = document.getElementById('check-btn');
+        const callBtn = document.getElementById('call-btn');
+        const betBtn = document.getElementById('bet-btn');
+        const allInBtn = document.getElementById('all-in-btn');
+        
+        if (foldBtn) foldBtn.addEventListener('click', () => this.playerAction('fold'));
+        if (checkBtn) checkBtn.addEventListener('click', () => this.playerAction('check'));
+        if (callBtn) callBtn.addEventListener('click', () => this.playerAction('call'));
+        if (betBtn) {
+            betBtn.addEventListener('click', () => {
+                const amount = parseInt(document.getElementById('bet-input').value) || 0;
+                if (amount > 0) this.playerAction('bet', amount);
+            });
+        }
+        if (allInBtn) allInBtn.addEventListener('click', () => this.playerAction('all-in'));
 
         const betSlider = document.getElementById('bet-slider');
         const betInput = document.getElementById('bet-input');
@@ -74,6 +118,7 @@ class MultiplayerPokerGame {
         }
 
         this.playerName = playerName;
+        console.log('Próba dołączenia do pokoju:', roomId, 'jako:', playerName);
         this.connectToServer(roomId);
     }
 
@@ -82,26 +127,54 @@ class MultiplayerPokerGame {
     }
 
     connectToServer(roomId) {
+        console.log('connectToServer wywołany z roomId:', roomId);
         this.showConnectionStatus('Łączenie z serwerem...', 'info');
         
-        // Próba połączenia z serwerem - jeśli nie ma serwera, przejdź do single-player
-        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        // Sprawdź czy Socket.IO jest dostępne
+        if (typeof io === 'undefined') {
+            console.log('Socket.IO nie jest dostępne');
+            this.showConnectionStatus('Socket.IO niedostępne. Uruchom grę z http://localhost:3000', 'error');
+            setTimeout(() => {
+                this.startSinglePlayerGame();
+            }, 3000);
+            return;
+        }
         
-        if (isLocalhost) {
-            // Tryb lokalny - próbuj połączyć z localhost:3000
+        console.log('Socket.IO jest dostępne');
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        console.log('isLocalhost:', isLocalhost, 'port:', window.location.port);
+        
+        if (isLocalhost && window.location.port === '3000') {
+            // Tryb lokalny z serwerem
+            console.log('Próba połączenia z lokalnym serwerem...');
             try {
-                this.socket = io('http://localhost:3000');
+                this.socket = io();
                 this.setupSocketEvents();
                 this.socket.emit('joinRoom', { roomId, playerName: this.playerName });
+                console.log('Wysłano joinRoom event');
+                
+                // Timeout dla połączenia
+                setTimeout(() => {
+                    if (!this.isConnected) {
+                        console.log('Timeout połączenia');
+                        this.showConnectionStatus('Timeout połączenia. Sprawdź czy serwer działa.', 'error');
+                        setTimeout(() => {
+                            this.startSinglePlayerGame();
+                        }, 2000);
+                    }
+                }, 5000);
+                
             } catch (error) {
-                this.showConnectionStatus('Serwer lokalny niedostępny. Przełączanie na single-player...', 'error');
+                console.error('Błąd połączenia Socket.IO:', error);
+                this.showConnectionStatus('Błąd połączenia z serwerem: ' + error.message, 'error');
                 setTimeout(() => {
                     this.startSinglePlayerGame();
                 }, 2000);
             }
         } else {
-            // Tryb GitHub Pages - tylko single-player
-            this.showConnectionStatus('Multiplayer niedostępny na GitHub Pages. Uruchamianie trybu single-player...', 'info');
+            // Tryb plikowy lub GitHub Pages - tylko single-player
+            console.log('Nie localhost:3000, przełączanie na single-player');
+            this.showConnectionStatus('Multiplayer dostępny tylko z http://localhost:3000. Przełączanie na single-player...', 'info');
             setTimeout(() => {
                 this.startSinglePlayerGame();
             }, 2000);
@@ -227,11 +300,14 @@ class MultiplayerPokerGame {
     }
 
     startSinglePlayerGame() {
+        console.log('Uruchamianie gry single-player...');
         this.isMultiplayer = false;
         document.getElementById('connection-menu').style.display = 'none';
         document.getElementById('main-game').style.display = 'flex';
         document.body.classList.remove('multiplayer-mode');
+        document.body.classList.add('single-player-mode');
         
+        console.log('Tworzenie instancji PokerGame...');
         this.singlePlayerGame = new PokerGame();
     }
 
@@ -432,6 +508,19 @@ class PokerGame {
         // Bindowanie eventów
         this.bindEvents();
         this.startNewGame();
+    }
+    
+    // Bindowanie eventów dla gry single-player
+    bindEvents() {
+        console.log('PokerGame: Bindowanie eventów...');
+        
+        const newGameBtn = document.getElementById('new-game-btn');
+        if (newGameBtn) {
+            newGameBtn.addEventListener('click', () => {
+                console.log('Nowa gra clicked');
+                this.startNewGame();
+            });
+        }
     }
     
     // Inicjalizacja talii kart
@@ -897,22 +986,45 @@ class PokerGame {
         
         // Pokazanie kart AI
         const aiCardsElement = document.getElementById('ai-cards');
-        aiCardsElement.innerHTML = '';
-        this.aiCards.forEach(card => {
-            const cardElement = this.createCardElement(card);
-            aiCardsElement.appendChild(cardElement);
-        });
+        if (aiCardsElement) {
+            aiCardsElement.innerHTML = '';
+            this.aiCards.forEach(card => {
+                const cardElement = this.createCardElement(card);
+                aiCardsElement.appendChild(cardElement);
+            });
+        }
         
-        // Pokazanie finalnych rąk
-        if (playerHandName) {
-            document.getElementById('player-final-hand').textContent = playerHandName;
-            document.getElementById('ai-final-hand').textContent = aiHandName;
-        } else {
-            document.getElementById('player-final-hand').textContent = subtitle;
-            document.getElementById('ai-final-hand').textContent = '';
+        // Pokazanie finalnych rąk w result-hands
+        const resultHands = document.getElementById('result-hands');
+        if (resultHands) {
+            if (playerHandName) {
+                resultHands.innerHTML = `
+                    <div class="player-hand">
+                        <h4>Twoja ręka:</h4>
+                        <div>${playerHandName}</div>
+                    </div>
+                    <div class="ai-hand">
+                        <h4>Ręka komputera:</h4>
+                        <div>${aiHandName}</div>
+                    </div>
+                `;
+            } else {
+                resultHands.innerHTML = `<div>${subtitle}</div>`;
+            }
         }
         
         document.getElementById('results').style.display = 'flex';
+        
+        // Dodaj event listener dla continue button
+        const continueBtn = document.getElementById('continue-btn');
+        if (continueBtn) {
+            continueBtn.onclick = () => {
+                document.getElementById('results').style.display = 'none';
+                if (this.playerChips > 0 && this.aiChips > 0) {
+                    this.startNewGame();
+                }
+            };
+        }
     }
     
     // Bindowanie eventów
@@ -947,7 +1059,7 @@ class PokerGame {
     }
 }
 
-// Uruchomienie gry po załadowaniu strony
+// Uruchomienie aplikacji
 document.addEventListener('DOMContentLoaded', () => {
-    new PokerGame();
+    new MultiplayerPokerGame();
 });
