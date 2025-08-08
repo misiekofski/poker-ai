@@ -1,0 +1,645 @@
+/* Reset i podstawowe style */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+    color: #ffffff;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Layout główny */
+#app {
+    width: 100%;
+    height: 100vh;
+    position: relative;
+}
+
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.screen.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Menu główne */
+#main-menu {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at center, #1a1a2e 0%, #16213e 100%);
+}
+
+.menu-container {
+    text-align: center;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.menu-container h1 {
+    font-size: 3rem;
+    margin-bottom: 2rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(45deg, #ffd700, #ffed4e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.game-modes {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.mode-btn {
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.mode-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+.mode-btn:active {
+    transform: translateY(0);
+}
+
+/* Panel developerski */
+.dev-panel {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dev-panel h3 {
+    margin-bottom: 1rem;
+    color: #ffd700;
+}
+
+.dev-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.dev-controls button {
+    padding: 0.5rem 1rem;
+    background: #ff6b35;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.dev-controls button:hover {
+    background: #e55a2b;
+}
+
+.dev-controls label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+/* Ekran gry */
+#game-screen {
+    display: grid;
+    grid-template-areas: 
+        "top top top"
+        "side table controls"
+        "side table controls";
+    grid-template-columns: 250px 1fr 300px;
+    grid-template-rows: 60px 1fr auto;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+/* Górny panel */
+.top-panel {
+    grid-area: top;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0 1rem;
+    border-radius: 10px;
+    backdrop-filter: blur(5px);
+}
+
+.game-info {
+    display: flex;
+    gap: 2rem;
+    font-weight: bold;
+}
+
+.back-btn {
+    padding: 0.5rem 1rem;
+    background: #666;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.back-btn:hover {
+    background: #555;
+}
+
+/* Stół pokerowy */
+.poker-table {
+    grid-area: table;
+    position: relative;
+    background: radial-gradient(ellipse at center, #0d4f0d 0%, #064206 100%);
+    border: 8px solid #8B4513;
+    border-radius: 50%;
+    aspect-ratio: 1;
+    max-width: 800px;
+    max-height: 800px;
+    width: 80vw;
+    height: 80vh;
+    margin: auto;
+    box-shadow: 
+        inset 0 0 50px rgba(0, 0, 0, 0.5),
+        0 0 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Community cards */
+.community-cards {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    gap: 8px;
+}
+
+/* Karty */
+.card-slot {
+    width: 80px;
+    height: 110px;
+    background: linear-gradient(45deg, #333, #555);
+    border: 2px solid #666;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: bold;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.card-slot.revealed {
+    background: white;
+    color: black;
+    border-color: #333;
+}
+
+.card-slot.red {
+    color: #d32f2f;
+}
+
+.card-slot.black {
+    color: #000;
+}
+
+/* Miejsca graczy */
+.player-seats {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.player-seat {
+    position: absolute;
+    width: 120px;
+    height: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Pozycjonowanie miejsc graczy */
+.player-seat[data-position="bottom"] {
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.player-seat[data-position="left"] {
+    left: -60px;
+    top: 60%;
+    transform: translateY(-50%);
+}
+
+.player-seat[data-position="top-left"] {
+    left: 10%;
+    top: 10%;
+}
+
+.player-seat[data-position="top"] {
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.player-seat[data-position="top-right"] {
+    right: 10%;
+    top: 10%;
+}
+
+.player-seat[data-position="right"] {
+    right: -60px;
+    top: 60%;
+    transform: translateY(-50%);
+}
+
+.player-cards {
+    display: flex;
+    gap: 4px;
+}
+
+.player-cards .card-slot {
+    width: 60px;
+    height: 85px;
+    font-size: 1.1rem;
+}
+
+.player-info {
+    background: rgba(0, 0, 0, 0.7);
+    padding: 8px 12px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.9rem;
+    min-width: 100px;
+}
+
+.player-name {
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+.player-chips {
+    color: #ffd700;
+}
+
+.player-bet {
+    color: #ff6b35;
+    font-weight: bold;
+}
+
+/* Wskaźniki stanu gracza */
+.player-seat.active {
+    animation: pulse 2s infinite;
+}
+
+.player-seat.folded .player-cards {
+    opacity: 0.3;
+}
+
+.player-seat.dealer::before {
+    content: "D";
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    width: 25px;
+    height: 25px;
+    background: #ffd700;
+    color: black;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* Pula */
+.pot-container {
+    position: absolute;
+    top: 35%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 10px 15px;
+    border-radius: 20px;
+    border: 2px solid #ffd700;
+}
+
+.pot-chips {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+}
+
+.pot-text {
+    font-weight: bold;
+    color: #ffd700;
+}
+
+/* Panel kontroli gracza */
+.player-controls {
+    grid-area: controls;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 1rem;
+    backdrop-filter: blur(5px);
+}
+
+.action-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 1rem;
+}
+
+.action-btn {
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.action-btn.fold {
+    background: #f44336;
+    color: white;
+}
+
+.action-btn.check {
+    background: #2196F3;
+    color: white;
+}
+
+.action-btn.call {
+    background: #4CAF50;
+    color: white;
+}
+
+.action-btn.raise {
+    background: #FF9800;
+    color: white;
+}
+
+.action-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.bet-controls {
+    text-align: center;
+}
+
+.bet-controls input[type="range"] {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.bet-amount {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ffd700;
+}
+
+/* Panel boczny */
+.side-panel {
+    grid-area: side;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    padding: 1rem;
+    backdrop-filter: blur(5px);
+    overflow-y: auto;
+}
+
+.side-panel h3 {
+    margin-bottom: 1rem;
+    color: #ffd700;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+    padding-bottom: 0.5rem;
+}
+
+.round-info div {
+    margin-bottom: 0.5rem;
+    padding: 0.3rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+}
+
+.players-list {
+    margin-top: 2rem;
+}
+
+#players-status {
+    font-size: 0.9rem;
+}
+
+.player-status {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    padding: 0.3rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+}
+
+/* Log gry (tryb dev) */
+.game-log {
+    margin-top: 2rem;
+    max-height: 300px;
+}
+
+#log-content {
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 5px;
+    padding: 0.5rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.log-entry {
+    margin-bottom: 0.2rem;
+    padding: 0.2rem;
+    border-left: 3px solid #666;
+    padding-left: 0.5rem;
+}
+
+.log-entry.info {
+    border-left-color: #2196F3;
+}
+
+.log-entry.warning {
+    border-left-color: #FF9800;
+}
+
+.log-entry.error {
+    border-left-color: #f44336;
+}
+
+.log-entry.game {
+    border-left-color: #4CAF50;
+}
+
+/* Overlay dla wiadomości */
+.message-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.message-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.message-content {
+    background: rgba(255, 255, 255, 0.95);
+    color: #333;
+    padding: 2rem;
+    border-radius: 15px;
+    text-align: center;
+    max-width: 400px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.message-content h2 {
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.message-content button {
+    margin-top: 1rem;
+    padding: 0.7rem 2rem;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+/* Responsywność */
+@media (max-width: 1200px) {
+    #game-screen {
+        grid-template-columns: 200px 1fr 250px;
+    }
+}
+
+@media (max-width: 900px) {
+    #game-screen {
+        grid-template-areas: 
+            "top top"
+            "table table"
+            "controls side";
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 60px 1fr auto;
+    }
+    
+    .poker-table {
+        max-width: 600px;
+        max-height: 600px;
+        width: 90vw;
+        height: 70vh;
+    }
+    
+    .card-slot {
+        width: 60px;
+        height: 85px;
+        font-size: 1.2rem;
+    }
+    
+    .player-cards .card-slot {
+        width: 45px;
+        height: 65px;
+        font-size: 0.9rem;
+    }
+    
+    .menu-container h1 {
+        font-size: 2rem;
+    }
+    
+    .game-modes {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .player-controls .action-buttons {
+        grid-template-columns: 1fr;
+    }
+    
+    .poker-table {
+        max-width: 400px;
+        max-height: 400px;
+        width: 95vw;
+        height: 60vh;
+    }
+    
+    .card-slot {
+        width: 40px;
+        height: 60px;
+        font-size: 1rem;
+    }
+    
+    .player-cards .card-slot {
+        width: 30px;
+        height: 45px;
+        font-size: 0.7rem;
+    }
+}
