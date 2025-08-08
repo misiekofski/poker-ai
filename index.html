@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Texas Hold'em Poker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- Menu połączenia -->
+        <div class="connection-menu" id="connection-menu">
+            <div class="menu-content">
+                <h2>Texas Hold'em Poker</h2>
+                <div class="connection-form">
+                    <input type="text" id="player-name" placeholder="Twoje imię" maxlength="15">
+                    <input type="text" id="room-id" placeholder="ID pokoju (opcjonalne)" maxlength="10">
+                    <button id="join-room-btn" class="btn btn-primary">Multiplayer Online</button>
+                    <div class="divider">lub</div>
+                    <button id="single-player-btn" class="btn btn-secondary">Gra z AI (Offline)</button>
+                    <div class="info-text">
+                        <small>Multiplayer działa tylko z uruchomionym serwerem lokalnym</small>
+                    </div>
+                </div>
+                <div class="connection-status" id="connection-status"></div>
+            </div>
+        </div>
+
+        <!-- Pokój oczekiwania -->
+        <div class="waiting-room" id="waiting-room" style="display: none;">
+            <div class="room-content">
+                <h2>Pokój: <span id="current-room-id"></span></h2>
+                <div class="players-list">
+                    <h3>Gracze w pokoju:</h3>
+                    <ul id="players-list"></ul>
+                </div>
+                <div class="room-controls">
+                    <button id="start-game-btn" class="btn btn-primary" style="display: none;">Rozpocznij grę</button>
+                    <button id="leave-room-btn" class="btn btn-secondary">Opuść pokój</button>
+                </div>
+                <div class="room-status" id="room-status">Oczekiwanie na więcej graczy...</div>
+            </div>
+        </div>
+
+        <!-- Główna gra -->
+        <div class="main-game" id="main-game" style="display: none;">
+            <header>
+                <h1>Texas Hold'em Poker</h1>
+                <div class="game-info">
+                    <div class="pot">Pula: $<span id="pot">0</span></div>
+                    <div class="round">Runda: <span id="round">Pre-flop</span></div>
+                    <div class="room-info">Pokój: <span id="game-room-id"></span></div>
+                </div>
+            </header>
+
+            <div class="table">
+                <!-- Pozycje graczy wokół stołu -->
+                <div class="players-container" id="players-container">
+                    <!-- Gracze będą dodawani dynamicznie -->
+                </div>
+
+                <!-- Karty wspólne -->
+                <div class="community-cards">
+                    <h3>Karty wspólne</h3>
+                    <div class="cards" id="community-cards">
+                        <div class="card hidden"></div>
+                        <div class="card hidden"></div>
+                        <div class="card hidden"></div>
+                        <div class="card hidden"></div>
+                        <div class="card hidden"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kontrole gracza -->
+            <div class="controls" id="game-controls">
+                <button id="fold-btn" class="btn btn-fold">Fold</button>
+                <button id="check-btn" class="btn btn-check">Check</button>
+                <button id="call-btn" class="btn btn-call">Call $<span id="call-amount">0</span></button>
+                <div class="bet-controls">
+                    <input type="range" id="bet-slider" min="0" max="1000" value="0" step="10">
+                    <input type="number" id="bet-input" min="0" max="1000" value="0" step="10">
+                    <button id="bet-btn" class="btn btn-bet">Bet/Raise</button>
+                </div>
+                <button id="all-in-btn" class="btn btn-all-in">All In</button>
+            </div>
+
+            <!-- Status gry -->
+            <div class="game-status" id="game-status"></div>
+        </div>
+
+        <!-- Wyniki -->
+        <div class="results" id="results" style="display: none;">
+            <div class="result-content">
+                <h2 id="result-title"></h2>
+                <div class="hands" id="result-hands">
+                    <!-- Wyniki będą dodawane dynamicznie -->
+                </div>
+                <button id="continue-btn" class="btn">Kontynuuj</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
