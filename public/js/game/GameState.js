@@ -240,8 +240,10 @@ class GameState {
         const bigBlind = activePlayers[bigBlindIndex % activePlayers.length];
         bigBlind.isBigBlind = true;
         
-        // Pierwszy gracz do akcji (po big blind)
-        this.currentPlayerIndex = (bigBlindIndex + 1) % activePlayers.length;
+        // Pierwszy gracz do akcji (po big blind) - znajdź w oryginalnej tablicy players
+        const nextActiveIndex = (bigBlindIndex + 1) % activePlayers.length;
+        const nextPlayer = activePlayers[nextActiveIndex];
+        this.currentPlayerIndex = this.players.findIndex(p => p.id === nextPlayer.id);
         
         logger.debug(`Pozycje: Dealer=${dealer.name}, SB=${smallBlind.name}, BB=${bigBlind.name}`);
     }
@@ -740,9 +742,8 @@ class GameState {
     }
     
     getCurrentPlayer() {
-        const activePlayers = this.getActivePlayers();
-        if (this.currentPlayerIndex >= 0 && this.currentPlayerIndex < activePlayers.length) {
-            return activePlayers[this.currentPlayerIndex];
+        if (this.currentPlayerIndex >= 0 && this.currentPlayerIndex < this.players.length) {
+            return this.players[this.currentPlayerIndex];
         }
         return null;
     }
@@ -767,15 +768,25 @@ class GameState {
             return -1;
         }
         
+        // Znajdź aktualnego gracza w tablicy aktywnych graczy
+        let currentActiveIndex = -1;
+        if (this.currentPlayerIndex >= 0) {
+            const currentPlayer = this.players[this.currentPlayerIndex];
+            if (currentPlayer) {
+                currentActiveIndex = activePlayers.findIndex(p => p.id === currentPlayer.id);
+            }
+        }
+        
         // Znajdź następnego gracza w kolejności
-        for (let i = 0; i < activePlayers.length; i++) {
-            const index = (this.currentPlayerIndex + i) % activePlayers.length;
+        for (let i = 1; i <= activePlayers.length; i++) {
+            const index = (currentActiveIndex + i) % activePlayers.length;
             const player = activePlayers[index];
             
-            if (player.status === Constants.PLAYER_STATUS.ACTIVE && 
+            if (player && player.status === Constants.PLAYER_STATUS.ACTIVE && 
                 !player.hasActed && 
                 player.chips > 0) {
-                return index;
+                // Zwróć indeks z oryginalnej tablicy players
+                return this.players.findIndex(p => p.id === player.id);
             }
         }
         
