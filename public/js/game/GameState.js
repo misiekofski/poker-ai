@@ -360,9 +360,27 @@ class GameState {
         }, delay);
     }
     
-    // Oblicz akcję bota (prosta logika - zostanie rozwinięta w AI.js)
+    // Oblicz akcję bota (używa AI jeśli dostępne)
     calculateBotAction(bot) {
-        // Prosta logika - zostanie zastąpiona przez AI
+        // Sprawdź czy bot ma AI
+        if (!bot.ai && typeof PokerAI !== 'undefined') {
+            // Utwórz AI dla bota jeśli nie ma
+            bot.ai = new PokerAI(bot, bot.aggressionLevel || 'normal');
+        }
+        
+        // Użyj AI jeśli dostępne
+        if (bot.ai) {
+            try {
+                const action = bot.ai.makeDecision(this);
+                logger.debug(`AI decyzja dla ${bot.name}: ${action.type} ${action.amount || ''}`);
+                return action;
+            } catch (error) {
+                logger.error(`Błąd AI dla ${bot.name}:`, error);
+                // Spadaj do prostej logiki
+            }
+        }
+        
+        // Prosta logika fallback
         const callAmount = this.currentBet - bot.currentBet;
         const handStrength = bot.getHandStrength(this.communityCards);
         
@@ -453,29 +471,32 @@ class GameState {
         
         switch (action) {
             case Constants.PLAYER_ACTIONS.FOLD:
-                player.fold();
+                player.performAction(action);
                 break;
                 
             case Constants.PLAYER_ACTIONS.CHECK:
-                player.check();
+                player.performAction(action);
                 break;
                 
             case Constants.PLAYER_ACTIONS.CALL:
                 const callAmount = this.currentBet - player.currentBet;
                 actualAmount = player.call(this.currentBet);
                 this.pot += actualAmount;
+                player.hasActed = true; // Upewnij się że jest ustawione
                 break;
                 
             case Constants.PLAYER_ACTIONS.RAISE:
                 actualAmount = player.raise(amount);
                 this.pot += actualAmount;
                 this.currentBet = player.currentBet;
+                player.hasActed = true; // Upewnij się że jest ustawione
                 break;
                 
             case Constants.PLAYER_ACTIONS.ALL_IN:
                 actualAmount = player.allIn();
                 this.pot += actualAmount;
                 this.currentBet = Math.max(this.currentBet, player.currentBet);
+                player.hasActed = true; // Upewnij się że jest ustawione
                 break;
         }
         

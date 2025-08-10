@@ -93,11 +93,8 @@ class GameTable {
             cardSlot.className = `card-slot revealed ${card.isRed() ? 'red' : 'black'}`;
         }
         
-        // Animacja pojawienia się
-        cardSlot.style.transform = 'scale(0)';
-        setTimeout(() => {
-            cardSlot.style.transform = 'scale(1)';
-        }, 50);
+        // Bez animacji skalowania - karty od razu widoczne
+        cardSlot.style.transform = 'scale(1)';
     }
     
     // Wyczyść kartę
@@ -287,11 +284,12 @@ class GameTable {
         });
     }
     
-    // Animuj pulsowanie elementu
+    // Animuj pulsowanie elementu (wyłączone aby nie mrugały karty)
     animatePulse(element, duration = 1000) {
-        element.style.animation = `pulse ${duration}ms ease-in-out`;
+        // Zamiast animacji pulse, dodajemy subtelny efekt
+        element.style.boxShadow = '0 0 20px rgba(40, 167, 69, 0.8)';
         setTimeout(() => {
-            element.style.animation = '';
+            element.style.boxShadow = '';
         }, duration);
     }
     
@@ -419,13 +417,13 @@ class GameTable {
     simulateCardDeal() {
         if (!config.isDev()) return;
         
-        const communitySlots = this.communityCardsElement.querySelectorAll('.card-slot');
-        
-        communitySlots.forEach((slot, index) => {
-            setTimeout(() => {
-                this.animateCardDeal(slot);
-            }, index * 200);
-        });
+        // Wyłączone aby karty nie mrugały
+        // const communitySlots = this.communityCardsElement.querySelectorAll('.card-slot');
+        // communitySlots.forEach((slot, index) => {
+        //     setTimeout(() => {
+        //         this.animateCardDeal(slot);
+        //     }, index * 200);
+        // });
     }
     
     // Uzyskaj informacje o stole (do debugowania)

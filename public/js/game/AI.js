@@ -48,7 +48,7 @@ class PokerAI {
             // Aktualizuj modele przeciwników
             this.updateOpponentModels(gameState);
             
-            logger.logAIAction(this.player.name, `${decision.action} ${decision.amount || ''}`, decision.reasoning);
+            logger.logAIAction(this.player.name, `${decision.type} ${decision.amount || ''}`, decision.reasoning);
             
             return decision;
             
@@ -391,7 +391,7 @@ class PokerAI {
         }
         
         return {
-            action: selectedAction,
+            type: selectedAction,
             amount: amount,
             confidence: availableActions[selectedAction],
             reasoning: this.generateReasoning(selectedAction, situation)
@@ -510,11 +510,11 @@ class PokerAI {
         const callAmount = gameState.currentBet - this.player.currentBet;
         
         if (callAmount === 0) {
-            return { action: 'check', amount: 0 };
+            return { type: 'check', amount: 0 };
         } else if (callAmount <= this.player.chips * 0.1) {
-            return { action: 'call', amount: callAmount };
+            return { type: 'call', amount: callAmount };
         } else {
-            return { action: 'fold', amount: 0 };
+            return { type: 'fold', amount: 0 };
         }
     }
     

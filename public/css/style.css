@@ -182,10 +182,10 @@ body {
     border: 8px solid #8B4513;
     border-radius: 50%;
     aspect-ratio: 1;
-    max-width: 800px;
-    max-height: 800px;
-    width: 80vw;
-    height: 80vh;
+    width: 900px;
+    height: 600px;
+    max-width: 90vw;
+    max-height: 80vh;
     margin: auto;
     box-shadow: 
         inset 0 0 50px rgba(0, 0, 0, 0.5),
@@ -199,37 +199,65 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     display: flex;
-    gap: 8px;
+    gap: 15px;
+    justify-content: center;
+    min-height: 140px;
+    z-index: 10;
 }
 
 /* Karty */
 .card-slot {
-    width: 80px;
-    height: 110px;
+    width: 100px !important;
+    height: 140px !important;
     background: linear-gradient(45deg, #333, #555);
-    border: 2px solid #666;
-    border-radius: 8px;
+    border: 3px solid #666;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.4rem;
+    font-size: 1.8rem !important;
     font-weight: bold;
     position: relative;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    z-index: 5;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
 }
 
 .card-slot.revealed {
-    background: white;
-    color: black;
-    border-color: #333;
+    background: white !important;
+    color: black !important;
+    border-color: #333 !important;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+    text-shadow: none !important;
+}
+
+.card-slot.hidden {
+    background: linear-gradient(45deg, #1a472a, #2d5a3d) !important;
+    border: 3px solid #0f2818 !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.card-slot.hidden::before {
+    content: "♠♥♦♣";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.5rem;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 2px;
 }
 
 .card-slot.red {
-    color: #d32f2f;
+    color: #dc3545 !important;
+    text-shadow: 1px 1px 2px rgba(255,255,255,0.8) !important;
 }
 
 .card-slot.black {
-    color: #000;
+    color: #212529 !important;
+    text-shadow: 1px 1px 2px rgba(255,255,255,0.8) !important;
 }
 
 /* Miejsca graczy */
@@ -286,45 +314,72 @@ body {
 
 .player-cards {
     display: flex;
-    gap: 4px;
+    gap: 10px;
+    justify-content: center;
+    margin: 10px 0;
+    min-height: 120px;
 }
 
 .player-cards .card-slot {
-    width: 60px;
-    height: 85px;
-    font-size: 1.1rem;
+    width: 80px !important;
+    height: 112px !important;
+    font-size: 1.4rem !important;
+    border: 2px solid #333;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.25);
 }
 
 .player-info {
-    background: rgba(0, 0, 0, 0.7);
-    padding: 8px 12px;
-    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 12px 16px;
+    border-radius: 12px;
     text-align: center;
-    font-size: 0.9rem;
-    min-width: 100px;
+    font-size: 1rem;
+    min-width: 130px;
+    border: 2px solid #444;
+    color: white;
+    margin-bottom: 10px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+    backdrop-filter: blur(3px);
 }
 
 .player-name {
     font-weight: bold;
-    margin-bottom: 2px;
+    margin-bottom: 3px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
 }
 
 .player-chips {
     color: #ffd700;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
 }
 
 .player-bet {
     color: #ff6b35;
     font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
 }
 
 /* Wskaźniki stanu gracza */
-.player-seat.active {
-    animation: pulse 2s infinite;
+.player-seat.active .player-info {
+    border-color: #28a745 !important;
+    box-shadow: 0 0 15px rgba(40, 167, 69, 0.8);
+    background: rgba(40, 167, 69, 0.1);
 }
 
 .player-seat.folded .player-cards {
     opacity: 0.3;
+    filter: grayscale(100%);
+}
+
+.player-seat.folded .player-info {
+    opacity: 0.6;
+    border-color: #6c757d !important;
+}
+
+.player-seat.all-in .player-info {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 15px rgba(220, 53, 69, 0.5);
 }
 
 .player-seat.dealer::before {
@@ -344,11 +399,6 @@ body {
     font-size: 0.8rem;
 }
 
-@keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-}
-
 /* Pula */
 .pot-container {
     position: absolute;
@@ -356,10 +406,12 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
-    background: rgba(0, 0, 0, 0.8);
-    padding: 10px 15px;
+    background: rgba(0, 0, 0, 0.9);
+    padding: 15px 20px;
     border-radius: 20px;
-    border: 2px solid #ffd700;
+    border: 3px solid #ffd700;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+    min-width: 120px;
 }
 
 .pot-chips {
@@ -370,15 +422,18 @@ body {
 .pot-text {
     font-weight: bold;
     color: #ffd700;
+    font-size: 1.2rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
 }
 
 /* Panel kontroli gracza */
 .player-controls {
     grid-area: controls;
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.4);
     border-radius: 10px;
     padding: 1rem;
     backdrop-filter: blur(5px);
+    border: 2px solid rgba(255, 255, 255, 0.1);
 }
 
 .action-buttons {
@@ -389,14 +444,16 @@ body {
 }
 
 .action-btn {
-    padding: 12px;
+    padding: 15px;
     border: none;
     border-radius: 8px;
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: bold;
     cursor: pointer;
     transition: all 0.2s ease;
     text-transform: uppercase;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
 }
 
 .action-btn:disabled {
@@ -409,9 +466,21 @@ body {
     color: white;
 }
 
+.action-btn.fold:hover {
+    background: #d32f2f;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(244, 67, 54, 0.4);
+}
+
 .action-btn.check {
     background: #2196F3;
     color: white;
+}
+
+.action-btn.check:hover {
+    background: #1976D2;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(33, 150, 243, 0.4);
 }
 
 .action-btn.call {
@@ -419,9 +488,21 @@ body {
     color: white;
 }
 
+.action-btn.call:hover {
+    background: #388E3C;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(76, 175, 80, 0.4);
+}
+
 .action-btn.raise {
     background: #FF9800;
     color: white;
+}
+
+.action-btn.raise:hover {
+    background: #F57C00;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(255, 152, 0, 0.4);
 }
 
 .action-btn:hover:not(:disabled) {
@@ -447,25 +528,32 @@ body {
 /* Panel boczny */
 .side-panel {
     grid-area: side;
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.4);
     border-radius: 10px;
-    padding: 1rem;
+    padding: 1.2rem;
     backdrop-filter: blur(5px);
     overflow-y: auto;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 
 .side-panel h3 {
     margin-bottom: 1rem;
     color: #ffd700;
-    border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+    border-bottom: 2px solid rgba(255, 215, 0, 0.5);
     padding-bottom: 0.5rem;
+    font-size: 1.1rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
 }
 
 .round-info div {
     margin-bottom: 0.5rem;
-    padding: 0.3rem;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 5px;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    border-left: 3px solid #4CAF50;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .players-list {
@@ -591,22 +679,22 @@ body {
     }
     
     .poker-table {
-        max-width: 600px;
-        max-height: 600px;
-        width: 90vw;
-        height: 70vh;
+        max-width: 700px;
+        max-height: 650px;
+        width: 95vw;
+        height: 75vh;
     }
     
     .card-slot {
-        width: 60px;
-        height: 85px;
-        font-size: 1.2rem;
+        width: 75px !important;
+        height: 105px !important;
+        font-size: 1.4rem !important;
     }
     
     .player-cards .card-slot {
-        width: 45px;
-        height: 65px;
-        font-size: 0.9rem;
+        width: 60px !important;
+        height: 84px !important;
+        font-size: 1.1rem !important;
     }
     
     .menu-container h1 {
@@ -625,21 +713,21 @@ body {
     }
     
     .poker-table {
-        max-width: 400px;
-        max-height: 400px;
+        max-width: 450px;
+        max-height: 450px;
         width: 95vw;
-        height: 60vh;
+        height: 65vh;
     }
     
     .card-slot {
-        width: 40px;
-        height: 60px;
-        font-size: 1rem;
+        width: 55px !important;
+        height: 77px !important;
+        font-size: 1.2rem !important;
     }
     
     .player-cards .card-slot {
-        width: 30px;
-        height: 45px;
-        font-size: 0.7rem;
+        width: 45px !important;
+        height: 63px !important;
+        font-size: 1rem !important;
     }
 }

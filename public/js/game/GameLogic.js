@@ -282,11 +282,28 @@ class GameLogic {
         return results;
     }
     
-    // Oblicz optymalną akcję dla bota (zaawansowana wersja)
+    // Oblicz optymalną akcję dla bota (używa AI)
     calculateOptimalBotAction(bot) {
-        // Ta metoda zostanie rozwinięta w AI.js
-        // Tutaj tylko podstawowa logika
+        // Sprawdź czy bot ma AI
+        if (!bot.ai) {
+            // Utwórz AI dla bota jeśli nie ma
+            bot.ai = new PokerAI(bot, bot.aggressionLevel || 'normal');
+        }
         
+        // Użyj AI do podjęcia decyzji
+        try {
+            const action = bot.ai.makeDecision(this.gameState);
+            logger.debug(`AI decyzja dla ${bot.name}: ${action.type} ${action.amount || ''}`);
+            return action;
+        } catch (error) {
+            logger.error(`Błąd AI dla ${bot.name}:`, error);
+            // Fallback - prosta logika
+            return this.calculateSimpleBotAction(bot);
+        }
+    }
+    
+    // Prosta logika fallback dla botów
+    calculateSimpleBotAction(bot) {
         const handStrength = bot.getHandStrength(this.gameState.communityCards);
         const callAmount = this.gameState.currentBet - bot.currentBet;
         const potOdds = callAmount / (this.gameState.pot + callAmount);

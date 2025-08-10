@@ -5,7 +5,8 @@ const GameRoom = require('./GameRoom');
 const BotManager = require('./BotManager');
 
 // Importuj moduły współdzielone
-const Constants = require('../public/js/shared/Constants');
+const { GameConstants, PokerUtils } = require('../public/js/shared/Constants');
+const Constants = GameConstants; // Kompatybilność
 const { Card, CardDeck } = require('../public/js/shared/CardDeck');
 const HandEvaluator = require('../public/js/shared/HandEvaluator');
 

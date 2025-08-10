@@ -55,6 +55,7 @@ class GameUI {
         };
         
         // Stan UI
+        this.humanPlayerId = null; // ID rzeczywistego gracza
         this.uiState = {
             currentScreen: 'main-menu',
             actionsEnabled: false,
@@ -144,6 +145,7 @@ class GameUI {
             
             // Dodaj gracza
             const { player: humanPlayer } = this.gameLogic.addPlayer('Ty', 1000, 'human');
+            this.humanPlayerId = humanPlayer.id; // Zapamiętaj ID gracza
             
             // Dodaj botów
             this.gameLogic.addBots(3);
@@ -227,7 +229,7 @@ class GameUI {
                 this.updateGameDisplay(gameState);
                 this.updatePlayerControls(gameState);
             }
-        }, 100); // Aktualizuj co 100ms
+        }, 1000); // Aktualizuj co 1000ms zamiast 100ms aby nie mrugały karty
     }
     
     // Zatrzymaj pętlę aktualizacji
@@ -414,7 +416,7 @@ class GameUI {
         }
         
         // Wykonaj akcję
-        const success = this.gameLogic.processAction('player_human', actionType, amount);
+        const success = this.gameLogic.processAction(this.humanPlayerId || 'player_human', actionType, amount);
         
         if (!success) {
             this.showMessage('Błąd', 'Nie udało się wykonać akcji');
@@ -448,8 +450,10 @@ class GameUI {
         
         if (this.gameLogic) {
             // Ustaw przykładowe karty testowe
+            const testPlayerCards = {};
+            testPlayerCards[this.humanPlayerId || 'player_human'] = ['AS', 'KH'];
             this.gameLogic.setTestCards(
-                { 'player_human': ['AS', 'KH'] }, // Karty gracza
+                testPlayerCards, // Karty gracza
                 ['QD', 'JC', '10S', '9H', '8D'] // Karty wspólne
             );
         }
