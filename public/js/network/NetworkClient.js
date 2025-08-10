@@ -25,6 +25,33 @@ class NetworkClient {
         logger.info('NetworkClient zainicjalizowany');
     }
     
+    // Zapewnienie dostępności Constants (lazy loading)
+    get Constants() {
+        if (typeof Constants !== 'undefined' && Constants.SOCKET_EVENTS) {
+            return Constants;
+        } else if (typeof GameConstants !== 'undefined' && GameConstants.SOCKET_EVENTS) {
+            return GameConstants;
+        } else {
+            // Fallback - podstawowe eventy
+            return {
+                SOCKET_EVENTS: {
+                    JOIN_GAME: 'join_game',
+                    LEAVE_GAME: 'leave_game',
+                    PLAYER_ACTION: 'player_action',
+                    START_GAME: 'start_game',
+                    ADD_BOTS: 'add_bots',
+                    GAME_STATE: 'game_state',
+                    PLAYER_JOINED: 'player_joined',
+                    PLAYER_LEFT: 'player_left',
+                    GAME_END: 'game_end',
+                    ERROR: 'error',
+                    TURN_CHANGE: 'turn_change',
+                    ROUND_END: 'round_end'
+                }
+            };
+        }
+    }
+    
     // Połącz z serwerem
     connect(playerName = 'Gracz', gameRoom = 'default') {
         try {
@@ -116,46 +143,46 @@ class NetworkClient {
         });
         
         // Eventy gry
-        this.socket.on(Constants.SOCKET_EVENTS.GAME_STATE, (gameState) => {
+        this.socket.on(this.Constants.SOCKET_EVENTS.GAME_STATE, (gameState) => {
             logger.debug('Otrzymano stan gry');
             if (this.onGameStateUpdate) {
                 this.onGameStateUpdate(gameState);
             }
         });
         
-        this.socket.on(Constants.SOCKET_EVENTS.PLAYER_JOINED, (playerData) => {
+        this.socket.on(this.Constants.SOCKET_EVENTS.PLAYER_JOINED, (playerData) => {
             logger.info(`Gracz dołączył: ${playerData.name}`);
             if (this.onPlayerJoined) {
                 this.onPlayerJoined(playerData);
             }
         });
         
-        this.socket.on(Constants.SOCKET_EVENTS.PLAYER_LEFT, (playerData) => {
+        this.socket.on(this.Constants.SOCKET_EVENTS.PLAYER_LEFT, (playerData) => {
             logger.info(`Gracz opuścił grę: ${playerData.name}`);
             if (this.onPlayerLeft) {
                 this.onPlayerLeft(playerData);
             }
         });
         
-        this.socket.on(Constants.SOCKET_EVENTS.GAME_END, (winnerData) => {
+        this.socket.on(this.Constants.SOCKET_EVENTS.GAME_END, (winnerData) => {
             logger.game('Gra zakończona');
             if (this.onGameEnd) {
                 this.onGameEnd(winnerData);
             }
         });
         
-        this.socket.on(Constants.SOCKET_EVENTS.ERROR, (errorData) => {
+        this.socket.on(this.Constants.SOCKET_EVENTS.ERROR, (errorData) => {
             logger.error('Błąd serwera:', errorData);
             this.handleError(errorData);
         });
         
         // Event dla zmian tury
-        this.socket.on(Constants.SOCKET_EVENTS.TURN_CHANGE, (turnData) => {
+        this.socket.on(this.Constants.SOCKET_EVENTS.TURN_CHANGE, (turnData) => {
             logger.debug(`Tura gracza: ${turnData.playerName}`);
         });
         
         // Event dla końca rundy
-        this.socket.on(Constants.SOCKET_EVENTS.ROUND_END, (roundData) => {
+        this.socket.on(this.Constants.SOCKET_EVENTS.ROUND_END, (roundData) => {
             logger.game(`Koniec rundy: ${roundData.winner || 'Brak zwycięzcy'}`);
         });
     }
@@ -173,7 +200,7 @@ class NetworkClient {
             timestamp: Date.now()
         };
         
-        this.socket.emit(Constants.SOCKET_EVENTS.JOIN_GAME, joinData, (response) => {
+        this.socket.emit(this.Constants.SOCKET_EVENTS.JOIN_GAME, joinData, (response) => {
             if (response.success) {
                 this.playerId = response.playerId;
                 logger.info(`Dołączono do gry. ID gracza: ${this.playerId}`);
@@ -188,7 +215,7 @@ class NetworkClient {
     leaveGame() {
         if (!this.socket || !this.connected) return;
         
-        this.socket.emit(Constants.SOCKET_EVENTS.LEAVE_GAME, {
+        this.socket.emit(this.Constants.SOCKET_EVENTS.LEAVE_GAME, {
             playerId: this.playerId
         });
         
@@ -209,7 +236,7 @@ class NetworkClient {
             timestamp: Date.now()
         };
         
-        this.socket.emit(Constants.SOCKET_EVENTS.PLAYER_ACTION, actionData, (response) => {
+        this.socket.emit(this.Constants.SOCKET_EVENTS.PLAYER_ACTION, actionData, (response) => {
             if (!response.success) {
                 logger.error('Błąd akcji gracza:', response.error);
                 this.handleError(response.error);
@@ -224,7 +251,7 @@ class NetworkClient {
     startGame() {
         if (!this.socket || !this.connected) return;
         
-        this.socket.emit(Constants.SOCKET_EVENTS.START_GAME, {
+        this.socket.emit(this.Constants.SOCKET_EVENTS.START_GAME, {
             playerId: this.playerId
         });
         
@@ -240,7 +267,7 @@ class NetworkClient {
             return;
         }
         
-        this.socket.emit(Constants.SOCKET_EVENTS.ADD_BOTS, {
+        this.socket.emit(this.Constants.SOCKET_EVENTS.ADD_BOTS, {
             playerId: this.playerId,
             count: count
         });

@@ -22,7 +22,7 @@ class PokerAI {
     generatePersonality() {
         return {
             bluffFrequency: Math.random() * 0.3, // 0-30% szans na bluff
-            foldThreshold: 0.2 + Math.random() * 0.3, // 20-50% próg foldowania
+            foldThreshold: 0.1 + Math.random() * 0.2, // 10-30% próg foldowania (bardziej agresywne)
             aggressionVariance: Math.random() * 0.2, // Zmienność agresji
             patternRecognition: Math.random() * 0.8, // Zdolność rozpoznawania wzorców
             riskTolerance: Math.random(), // Tolerancja ryzyka
@@ -106,8 +106,31 @@ class PokerAI {
                 gameState.communityCards
             );
             
-            // Normalizuj do 0-1 (10 = ROYAL_FLUSH ranking)
-            let strength = handResult.ranking / 10;
+            // Lepsza normalizacja siły ręki (0-1)
+            let strength;
+            if (handResult.ranking === 0) { // HIGH_CARD
+                strength = 0.1;
+            } else if (handResult.ranking === 1) { // PAIR
+                strength = 0.25;
+            } else if (handResult.ranking === 2) { // TWO_PAIR
+                strength = 0.45;
+            } else if (handResult.ranking === 3) { // THREE_OF_A_KIND
+                strength = 0.65;
+            } else if (handResult.ranking === 4) { // STRAIGHT
+                strength = 0.75;
+            } else if (handResult.ranking === 5) { // FLUSH
+                strength = 0.8;
+            } else if (handResult.ranking === 6) { // FULL_HOUSE
+                strength = 0.9;
+            } else if (handResult.ranking === 7) { // FOUR_OF_A_KIND
+                strength = 0.95;
+            } else if (handResult.ranking === 8) { // STRAIGHT_FLUSH
+                strength = 0.98;
+            } else if (handResult.ranking >= 9) { // ROYAL_FLUSH
+                strength = 1.0;
+            } else {
+                strength = handResult.ranking / 10;
+            }
             
             // Dostosuj względem liczby przeciwników
             const activePlayers = gameState.getActivePlayers().length;
@@ -291,25 +314,25 @@ class PokerAI {
         
         // Bazowe prawdopodobieństwa w zależności od siły ręki
         if (situation.handStrength < this.personality.foldThreshold) {
-            probabilities.fold = 0.8;
-            probabilities.call = 0.15;
-            probabilities.check = 0.05;
-        } else if (situation.handStrength < 0.5) {
-            probabilities.fold = 0.3;
+            probabilities.fold = 0.6; // Zmniejszone z 0.8
+            probabilities.call = 0.25; // Zwiększone z 0.15
+            probabilities.check = 0.15; // Zwiększone z 0.05
+        } else if (situation.handStrength < 0.4) {
+            probabilities.fold = 0.2; // Zmniejszone z 0.3
             probabilities.call = 0.5;
             probabilities.check = 0.15;
-            probabilities.raise = 0.05;
+            probabilities.raise = 0.15; // Zwiększone z 0.05
         } else if (situation.handStrength < 0.7) {
-            probabilities.fold = 0.1;
-            probabilities.call = 0.4;
-            probabilities.check = 0.2;
-            probabilities.raise = 0.3;
+            probabilities.fold = 0.05; // Zmniejszone z 0.1
+            probabilities.call = 0.35; // Zmniejszone z 0.4
+            probabilities.check = 0.15; // Zmniejszone z 0.2
+            probabilities.raise = 0.45; // Zwiększone z 0.3
         } else {
-            probabilities.fold = 0.05;
-            probabilities.call = 0.25;
-            probabilities.check = 0.1;
-            probabilities.raise = 0.5;
-            probabilities.allIn = 0.1;
+            probabilities.fold = 0.02; // Zmniejszone z 0.05
+            probabilities.call = 0.18; // Zmniejszone z 0.25
+            probabilities.check = 0.05; // Zmniejszone z 0.1
+            probabilities.raise = 0.6; // Zwiększone z 0.5
+            probabilities.allIn = 0.15; // Zwiększone z 0.1
         }
         
         // Dostosowania na podstawie pot odds

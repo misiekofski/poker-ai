@@ -1,6 +1,7 @@
 // BotManager.js - Zarządzanie botami AI
 
-const Constants = require('../public/js/shared/Constants');
+const { GameConstants, PokerUtils } = require('../public/js/shared/Constants');
+const Constants = GameConstants;
 
 class BotManager {
     constructor() {

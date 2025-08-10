@@ -148,7 +148,7 @@ class GameUI {
             this.humanPlayerId = humanPlayer.id; // Zapamiętaj ID gracza
             
             // Dodaj botów
-            this.gameLogic.addBots(3);
+            this.gameLogic.addBots(5);
             
             // Przełącz na ekran gry
             this.switchScreen('game-screen');
