@@ -407,6 +407,22 @@ class PokerAI {
         let amount = 0;
         if (selectedAction === 'raise') {
             amount = this.calculateRaiseAmount(situation);
+            
+            // Fallback: jeśli kwota nie jest prawidłowa, użyj minimum
+            const minRaise = situation.currentBet + 20;
+            if (amount < minRaise) {
+                amount = minRaise;
+                logger.warn(`AI ${this.player.name}: skorygowano kwotę raise z ${this.calculateRaiseAmount(situation)} na ${amount}`);
+            }
+            
+            // Sprawdź czy gracz ma wystarczająco żetonów
+            const maxPossibleBet = this.player.chips + this.player.currentBet;
+            if (amount > maxPossibleBet) {
+                // Zmień na all-in
+                selectedAction = 'allIn';
+                amount = this.player.chips;
+                logger.debug(`AI ${this.player.name}: zmiana raise na all-in (brak wystarczających żetonów)`);
+            }
         } else if (selectedAction === 'call') {
             amount = situation.callAmount;
         } else if (selectedAction === 'allIn') {
@@ -471,9 +487,10 @@ class PokerAI {
     
     // Oblicz kwotę podniesienia
     calculateRaiseAmount(situation) {
+        const minRaise = situation.currentBet + 20; // Minimum raise amount (total bet)
         const baseRaise = situation.currentBet + 20;
-        const potSizeRaise = situation.potSize * 0.5;
-        const aggressionRaise = situation.potSize * this.aggressionLevel;
+        const potSizeRaise = situation.currentBet + (situation.potSize * 0.5);
+        const aggressionRaise = situation.currentBet + (situation.potSize * this.personality.aggression);
         
         // Wybierz na podstawie sytuacji i osobowości
         let raiseAmount;
@@ -489,8 +506,12 @@ class PokerAI {
             raiseAmount = Math.max(baseRaise, aggressionRaise);
         }
         
-        // Ogranicz do dostępnych żetonów
-        raiseAmount = Math.min(raiseAmount, this.player.chips);
+        // Upewnij się że nie jest mniejsze niż minimum
+        raiseAmount = Math.max(raiseAmount, minRaise);
+        
+        // Ogranicz do dostępnych żetonów (total bet nie może przekroczyć chips + currentBet)
+        const maxPossibleBet = this.player.chips + this.player.currentBet;
+        raiseAmount = Math.min(raiseAmount, maxPossibleBet);
         
         // Zaokrąglij do wielokrotności 10
         return Math.round(raiseAmount / 10) * 10;

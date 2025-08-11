@@ -429,6 +429,14 @@ class GameState {
         // Aktualizuj stan gry
         this.updateGameStateAfterAction(player, action, actualAmount);
         
+        // Sprawdź czy pozostał tylko jeden gracz (natychmiastowe zwycięstwo)
+        const playersInRound = this.getActivePlayers().filter(p => p.status !== Constants.PLAYER_STATUS.FOLDED);
+        if (playersInRound.length === 1) {
+            logger.game(`Tylko jeden gracz pozostał w rundzie - automatyczne zwycięstwo!`);
+            this.showdown();
+            return true;
+        }
+        
         // Sprawdź czy runda licytacji się skończyła
         if (this.isBettingRoundComplete()) {
             this.advanceToNextPhase();
@@ -457,7 +465,13 @@ class GameState {
                 
             case Constants.PLAYER_ACTIONS.RAISE:
                 const minRaise = this.currentBet + this.minRaise;
-                return amount >= Math.min(minRaise, player.chips) && amount <= player.chips;
+                const isValid = amount >= Math.min(minRaise, player.chips) && amount <= player.chips;
+                
+                if (!isValid) {
+                    logger.warn(`Nieprawidłowy raise dla ${player.name}: amount=${amount}, minRaise=${minRaise}, currentBet=${this.currentBet}, playerChips=${player.chips}`);
+                }
+                
+                return isValid;
                 
             case Constants.PLAYER_ACTIONS.ALL_IN:
                 return player.chips > 0;
@@ -553,6 +567,14 @@ class GameState {
     
     // Przejdź do następnej fazy
     advanceToNextPhase() {
+        // Sprawdź czy pozostał tylko jeden gracz przed przejściem do kolejnej fazy
+        const playersInRound = this.getActivePlayers().filter(p => p.status !== Constants.PLAYER_STATUS.FOLDED);
+        if (playersInRound.length === 1) {
+            logger.game(`Tylko jeden gracz pozostał - przejście do showdown`);
+            this.showdown();
+            return;
+        }
+        
         // Resetuj flagi akcji
         this.players.forEach(player => player.resetForNewPhase());
         
