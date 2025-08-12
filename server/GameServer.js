@@ -115,7 +115,7 @@ class GameServer {
             // Pobierz lub utwórz pokój
             let room = this.gameRooms.get(gameRoom);
             if (!room) {
-                room = new GameRoom(gameRoom, this.isDev);
+                room = new GameRoom(gameRoom, this.isDev, this);
                 this.gameRooms.set(gameRoom, room);
                 this.stats.activeGames++;
                 this.log(`🏠 Utworzono nowy pokój: ${gameRoom}`);

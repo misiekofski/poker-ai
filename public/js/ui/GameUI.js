@@ -301,6 +301,12 @@ class GameUI {
         // Zatrzymaj pętlę aktualizacji
         this.stopUpdateLoop();
         
+        // Ukryj przycisk startu gry multiplayer
+        const startButton = document.getElementById('start-multiplayer-game');
+        if (startButton) {
+            startButton.style.display = 'none';
+        }
+        
         // Resetuj stół
         this.gameTable.resetTable();
         
@@ -579,7 +585,87 @@ class GameUI {
     // Obsługa eventów
     
     handleGameStateUpdate(gameState) {
-        this.updateGameDisplay(gameState);
+        // Przekształć dane z serwera na format oczekiwany przez frontend
+        if (gameState.players && gameState.bots) {
+            // Multiplayer - połącz graczy i boty w jedną tablicę
+            const allPlayers = [];
+            
+            // Dodaj graczy ludzkich
+            gameState.players.forEach(player => {
+                allPlayers.push({
+                    ...player,
+                    seatNumber: player.seatIndex,
+                    hand: player.cards, // Mapuj cards na hand dla kompatybilności
+                    type: 'human',
+                    status: player.isFolded ? 'folded' : 
+                           player.isAllIn ? 'all_in' : 'active'
+                });
+            });
+            
+            // W trybie multiplayer NIE dodawaj botów - tylko prawdziwi gracze
+            // gameState.bots zostają zignorowane
+            
+            // Przygotuj stan gry dla frontendu
+            const frontendGameState = {
+                ...gameState.game,
+                players: allPlayers
+            };
+            
+            this.updateGameDisplay(frontendGameState);
+            
+            // Sprawdź czy można rozpocząć grę
+            this.checkStartGameAvailability(allPlayers.length);
+        } else {
+            // Singleplayer - użyj bezpośrednio
+            this.updateGameDisplay(gameState);
+        }
+    }
+    
+    // Sprawdź czy można rozpocząć grę w multiplayer
+    checkStartGameAvailability(playerCount) {
+        if (this.currentGameMode !== 'multiplayer') return;
+        
+        // Znajdź lub utwórz przycisk startu gry
+        let startButton = document.getElementById('start-multiplayer-game');
+        if (!startButton) {
+            startButton = this.createStartGameButton();
+        }
+        
+        if (playerCount >= 2) {
+            startButton.style.display = 'block';
+            startButton.disabled = false;
+            startButton.textContent = `Rozpocznij grę (${playerCount} graczy)`;
+        } else {
+            startButton.style.display = 'block';
+            startButton.disabled = true;
+            startButton.textContent = `Oczekiwanie na graczy (${playerCount}/2)`;
+        }
+    }
+    
+    // Utwórz przycisk startu gry
+    createStartGameButton() {
+        const button = document.createElement('button');
+        button.id = 'start-multiplayer-game';
+        button.className = 'start-game-btn';
+        button.textContent = 'Rozpocznij grę';
+        button.style.display = 'none';
+        
+        // Dodaj do top-panel
+        const topPanel = document.querySelector('.top-panel .game-info');
+        if (topPanel) {
+            topPanel.appendChild(button);
+        }
+        
+        // Obsługa kliknięcia
+        button.addEventListener('click', () => {
+            if (this.networkClient) {
+                this.networkClient.startGame();
+                button.disabled = true;
+                button.textContent = 'Rozpoczynanie...';
+            }
+        });
+        
+        return button;
     }
     
     handleGameEnd(winner) {

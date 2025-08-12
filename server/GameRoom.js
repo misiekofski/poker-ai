@@ -6,9 +6,10 @@ const { Card, CardDeck } = require('../public/js/shared/CardDeck');
 const HandEvaluator = require('../public/js/shared/HandEvaluator');
 
 class GameRoom {
-    constructor(name, isDev = false) {
+    constructor(name, isDev = false, gameServer = null) {
         this.name = name;
         this.isDev = isDev;
+        this.gameServer = gameServer; // Referencja do serwera dla wysyłania aktualizacji
         
         // Gracze i boty
         this.players = new Map(); // playerId -> player object
@@ -35,7 +36,7 @@ class GameRoom {
             bigBlind: 20,
             maxBuyIn: 2000,
             minBuyIn: 200,
-            autoStartDelay: 3000, // 3 sekundy do auto-startu
+            autoStartDelay: 0, // Wyłączony auto-start - gracze muszą ręcznie rozpocząć
             actionTimeout: 30000, // 30 sekund na akcję
             maxHandsPerHour: 120
         };
@@ -59,6 +60,13 @@ class GameRoom {
         this.handEvaluator = new HandEvaluator();
         
         this.log(`🏠 Utworzono pokój: ${name}`);
+    }
+    
+    // Wyślij aktualizację stanu gry do wszystkich graczy
+    broadcastGameState() {
+        if (this.gameServer) {
+            this.gameServer.broadcastGameState(this.name);
+        }
     }
     
     // Dodaj gracza
@@ -257,6 +265,9 @@ class GameRoom {
         
         this.log(`🎲 Rozpoczęto rękę #${this.gameState.handNumber}`);
         this.updateLastActivity();
+        
+        // Wyślij aktualizację stanu gry
+        this.broadcastGameState();
     }
     
     // Reset graczy na nową rękę
@@ -379,6 +390,9 @@ class GameRoom {
         } catch (error) {
             this.logError('Błąd przetwarzania akcji:', error);
             return { success: false, error: 'Nie można przetworzyć akcji' };
+        } finally {
+            // Zawsze wyślij aktualizację stanu po akcji
+            this.broadcastGameState();
         }
     }
     
@@ -565,6 +579,9 @@ class GameRoom {
         this.startActionTimer();
         
         this.log(`🃏 Faza: ${this.gameState.phase}`);
+        
+        // Wyślij aktualizację stanu gry
+        this.broadcastGameState();
     }
     
     // Rozdaj flop (3 karty)
@@ -758,6 +775,9 @@ class GameRoom {
     checkAutoStart() {
         if (this.gameState.isActive) return;
         
+        // Auto-start wyłączony w multiplayer - gracze muszą ręcznie rozpocząć grę
+        if (this.config.autoStartDelay === 0) return;
+        
         const activePlayerCount = this.getActivePlayerCount();
         if (activePlayerCount >= 2) {
             this.clearAutoStartTimer();
@@ -942,12 +962,15 @@ class GameRoom {
                 config: this.config,
                 stats: this.stats
             },
-            game: { ...this.gameState },
+            game: {
+                ...this.gameState,
+                communityCards: this.gameState.communityCards.map(card => card.toString()) // Konwertuj karty wspólne na stringi
+            },
             players: Array.from(this.players.values()).map(p => ({
                 id: p.id,
                 name: p.name,
                 chips: p.chips,
-                cards: p.cards, // W prawdziwej grze ukryte dla innych graczy
+                cards: p.cards.map(card => card.toString()), // Konwertuj karty na stringi
                 isActive: p.isActive,
                 isFolded: p.isFolded,
                 isAllIn: p.isAllIn,

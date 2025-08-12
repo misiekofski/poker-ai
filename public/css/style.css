@@ -826,3 +826,28 @@ body {
 .dialog-buttons .btn.secondary:hover {
     background: #e9e9e9;
 }
+
+/* Przycisk startu gry multiplayer */
+.start-game-btn {
+    padding: 0.5rem 1rem;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: bold;
+    transition: all 0.2s;
+    margin-left: 1rem;
+}
+
+.start-game-btn:hover:not(:disabled) {
+    background: #45a049;
+    transform: translateY(-1px);
+}
+
+.start-game-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}

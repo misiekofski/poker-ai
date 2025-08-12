@@ -89,12 +89,26 @@ class GameTable {
             cardSlot.textContent = '🂠';
             cardSlot.className = 'card-slot hidden';
         } else {
-            cardSlot.textContent = card.toString();
-            cardSlot.className = `card-slot revealed ${card.isRed() ? 'red' : 'black'}`;
+            // Konwertuj string na obiekt Card jeśli potrzeba
+            const cardObj = this.ensureCardObject(card);
+            
+            cardSlot.textContent = cardObj.toString();
+            cardSlot.className = `card-slot revealed ${cardObj.isRed() ? 'red' : 'black'}`;
         }
         
         // Bez animacji skalowania - karty od razu widoczne
         cardSlot.style.transform = 'scale(1)';
+    }
+    
+    // Zapewnij że mamy obiekt Card (konwertuj string jeśli potrzeba)
+    ensureCardObject(card) {
+        if (typeof card === 'string') {
+            // Konwertuj string na obiekt Card
+            const suit = card.slice(-1);
+            const rank = card.slice(0, -1);
+            return new Card(suit, rank);
+        }
+        return card;
     }
     
     // Wyczyść kartę
