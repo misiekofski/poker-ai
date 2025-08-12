@@ -171,6 +171,95 @@ class GameUI {
     // Rozpocznij tryb multiplayer
     startMultiplayer() {
         try {
+            // Pokaż dialog wyboru nazwy gracza
+            this.showPlayerNameDialog();
+            
+        } catch (error) {
+            logger.error('Błąd inicjalizacji multiplayer:', error);
+            this.showMessage('Błąd', 'Nie udało się uruchomić trybu multiplayer.');
+        }
+    }
+    
+    // Pokaż dialog wyboru nazwy gracza
+    showPlayerNameDialog() {
+        const dialog = document.getElementById('player-name-dialog');
+        const input = document.getElementById('player-name-input');
+        const confirmBtn = document.getElementById('player-name-confirm');
+        const cancelBtn = document.getElementById('player-name-cancel');
+        
+        // Pokaż dialog
+        dialog.classList.add('show');
+        
+        // Focus na input
+        setTimeout(() => input.focus(), 100);
+        
+        // Ustaw losową nazwę domyślną
+        const defaultNames = ['Gracz', 'Player', 'Poker_Fan', 'Texas_Holdem', 'Card_Master'];
+        const randomName = defaultNames[Math.floor(Math.random() * defaultNames.length)] + Math.floor(Math.random() * 1000);
+        input.value = randomName;
+        input.select();
+        
+        // Obsługa przycisków
+        const handleConfirm = () => {
+            const playerName = input.value.trim();
+            
+            if (!playerName) {
+                input.focus();
+                return;
+            }
+            
+            if (playerName.length < 3) {
+                alert('Nazwa gracza musi mieć co najmniej 3 znaki');
+                input.focus();
+                return;
+            }
+            
+            if (playerName.length > 20) {
+                alert('Nazwa gracza może mieć maksymalnie 20 znaków');
+                input.focus();
+                return;
+            }
+            
+            // Ukryj dialog
+            dialog.classList.remove('show');
+            
+            // Rozpocznij multiplayer z nazwą gracza
+            this.connectToMultiplayer(playerName);
+            
+            // Usuń event listenery
+            confirmBtn.removeEventListener('click', handleConfirm);
+            cancelBtn.removeEventListener('click', handleCancel);
+            input.removeEventListener('keydown', handleKeydown);
+        };
+        
+        const handleCancel = () => {
+            dialog.classList.remove('show');
+            
+            // Usuń event listenery
+            confirmBtn.removeEventListener('click', handleConfirm);
+            cancelBtn.removeEventListener('click', handleCancel);
+            input.removeEventListener('keydown', handleKeydown);
+        };
+        
+        const handleKeydown = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleConfirm();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                handleCancel();
+            }
+        };
+        
+        // Dodaj event listenery
+        confirmBtn.addEventListener('click', handleConfirm);
+        cancelBtn.addEventListener('click', handleCancel);
+        input.addEventListener('keydown', handleKeydown);
+    }
+    
+    // Połącz z serwerem multiplayer
+    connectToMultiplayer(playerName) {
+        try {
             this.currentGameMode = 'multiplayer';
             
             // Inicjalizuj klienta sieciowego
@@ -181,14 +270,14 @@ class GameUI {
                 this.networkClient.onError = (error) => this.handleNetworkError(error);
             }
             
-            // Połącz z serwerem
-            this.networkClient.connect();
+            // Połącz z serwerem używając nazwy gracza
+            this.networkClient.connect(playerName);
             
             // Przełącz na ekran gry
             this.switchScreen('game-screen');
-            this.updateGameModeDisplay('Multiplayer (oczekiwanie...)');
+            this.updateGameModeDisplay(`Multiplayer - ${playerName} (oczekiwanie...)`);
             
-            logger.game('Rozpoczęto tryb multiplayer');
+            logger.game(`Rozpoczęto multiplayer jako: ${playerName}`);
             
         } catch (error) {
             logger.error('Błąd rozpoczęcia multiplayer:', error);
