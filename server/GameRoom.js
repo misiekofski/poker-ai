@@ -956,6 +956,11 @@ class GameRoom {
     // Publiczne API
     
     getGameState() {
+        // Oblicz currentPlayerIndex na podstawie activePlayer
+        const allPlayers = Array.from(this.players.values());
+        const currentPlayerIndex = this.gameState.activePlayer ? 
+            allPlayers.findIndex(p => p.id === this.gameState.activePlayer) : -1;
+        
         return {
             room: {
                 name: this.name,
@@ -964,6 +969,7 @@ class GameRoom {
             },
             game: {
                 ...this.gameState,
+                currentPlayerIndex: currentPlayerIndex,
                 communityCards: this.gameState.communityCards.map(card => card.toString()) // Konwertuj karty wspólne na stringi
             },
             players: Array.from(this.players.values()).map(p => ({

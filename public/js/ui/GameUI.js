@@ -400,19 +400,71 @@ class GameUI {
     
     // Sprawdź czy to tura gracza
     checkPlayerTurn(gameState) {
-        const currentPlayer = gameState.players[gameState.currentPlayerIndex];
-        const isPlayerTurn = currentPlayer && currentPlayer.seatNumber === 0; // Gracz zawsze na seat 0
+        let currentPlayer, isPlayerTurn;
+        
+        console.log('🎮 [GameUI] checkPlayerTurn - gameState:', gameState);
+        console.log('🎮 [GameUI] currentPlayerIndex:', gameState.currentPlayerIndex);
+        console.log('🎮 [GameUI] players:', gameState.players);
+        
+        if (this.currentGameMode === 'multiplayer') {
+            // W multiplayer sprawdź czy obecny gracz to my
+            currentPlayer = gameState.players[gameState.currentPlayerIndex];
+            const myPlayerId = this.networkClient?.playerId || this.networkClient?.playerName;
+            isPlayerTurn = currentPlayer && (currentPlayer.id === myPlayerId || currentPlayer.name === myPlayerId);
+            
+            console.log('🎮 [GameUI] Sprawdzam turę - Obecny gracz:', currentPlayer?.name, 'Mój ID:', myPlayerId, 'Moja tura:', isPlayerTurn);
+        } else {
+            // W singleplayer gracz zawsze na seat 0
+            currentPlayer = gameState.players[gameState.currentPlayerIndex];
+            isPlayerTurn = currentPlayer && currentPlayer.seatNumber === 0;
+        }
         
         this.uiState.playerTurn = isPlayerTurn;
         this.uiState.actionsEnabled = isPlayerTurn && gameState.isActive;
         
+        console.log('🎮 [GameUI] actionsEnabled:', this.uiState.actionsEnabled, 'isPlayerTurn:', isPlayerTurn, 'gameState.isActive:', gameState.isActive);
+        
         if (isPlayerTurn) {
-            // Pobierz dostępne akcje
-            const availableActions = this.gameLogic.getAvailableActions(currentPlayer.id);
-            this.updateAvailableActions(availableActions);
+            if (this.currentGameMode === 'multiplayer') {
+                // W multiplayer - podstawowe akcje na podstawie stanu gry
+                const availableActions = this.getMultiplayerAvailableActions(gameState, currentPlayer);
+                this.updateAvailableActions(availableActions);
+            } else {
+                // W singleplayer - używaj gameLogic
+                const availableActions = this.gameLogic.getAvailableActions(currentPlayer.id);
+                this.updateAvailableActions(availableActions);
+            }
         } else {
             this.disableAllActions();
         }
+    }
+    
+    // Pobierz dostępne akcje w trybie multiplayer
+    getMultiplayerAvailableActions(gameState, currentPlayer) {
+        const actions = [];
+        
+        // Zawsze można spasować
+        actions.push({ type: 'fold', amount: 0 });
+        
+        // Sprawdź czy można sprawdzić
+        if (gameState.currentBet === currentPlayer.currentBet || gameState.currentBet === 0) {
+            actions.push({ type: 'check', amount: 0 });
+        } else {
+            // Można dopłacić
+            const callAmount = gameState.currentBet - currentPlayer.currentBet;
+            if (callAmount <= currentPlayer.chips) {
+                actions.push({ type: 'call', amount: callAmount });
+            }
+        }
+        
+        // Można podbijać jeśli ma wystarczająco żetonów
+        const minRaise = gameState.currentBet * 2;
+        if (minRaise <= currentPlayer.chips) {
+            actions.push({ type: 'raise', amount: minRaise });
+        }
+        
+        console.log('🎮 [GameUI] Dostępne akcje multiplayer:', actions);
+        return actions;
     }
     
     // Aktualizuj dostępne akcje
@@ -490,8 +542,22 @@ class GameUI {
     
     // Wykonaj akcję gracza
     playerAction(actionType) {
-        if (!this.uiState.actionsEnabled || !this.gameLogic) {
-            return;
+        console.log('🎮 [GameUI] playerAction:', actionType, 'Tryb:', this.currentGameMode);
+        console.log('🎮 [GameUI] uiState.actionsEnabled:', this.uiState.actionsEnabled);
+        console.log('🎮 [GameUI] networkClient:', !!this.networkClient);
+        console.log('🎮 [GameUI] gameLogic:', !!this.gameLogic);
+        
+        // W multiplayer używamy networkClient, w singleplayer gameLogic
+        if (this.currentGameMode === 'multiplayer') {
+            if (!this.uiState.actionsEnabled || !this.networkClient) {
+                console.log('🎮 [GameUI] Akcje wyłączone lub brak networkClient');
+                return;
+            }
+        } else {
+            if (!this.uiState.actionsEnabled || !this.gameLogic) {
+                console.log('🎮 [GameUI] Akcje wyłączone lub brak gameLogic');
+                return;
+            }
         }
         
         let amount = 0;
@@ -510,17 +576,26 @@ class GameUI {
             amount = availableAction.amount;
         }
         
-        // Wykonaj akcję
-        const success = this.gameLogic.processAction(this.humanPlayerId || 'player_human', actionType, amount);
-        
-        if (!success) {
-            this.showMessage('Błąd', 'Nie udało się wykonać akcji');
-            this.gameTable.animateShake(this.elements[actionType + 'Btn']);
-        } else {
+        // Wykonaj akcję w odpowiednim trybie
+        if (this.currentGameMode === 'multiplayer') {
+            console.log('🎮 [GameUI] Wysyłam akcję do serwera:', actionType, amount);
+            // W trybie multiplayer wyślij akcję do serwera
+            this.networkClient.sendPlayerAction(actionType, amount);
             // Wyłącz akcje do następnej tury
             this.disableAllActions();
+        } else {
+            // Tryb singleplayer - używaj gameLogic
+            const success = this.gameLogic.processAction(this.humanPlayerId || 'player_human', actionType, amount);
             
-            logger.game(`Gracz wykonał akcję: ${actionType} ${amount > 0 ? '$' + amount : ''}`);
+            if (!success) {
+                this.showMessage('Błąd', 'Nie udało się wykonać akcji');
+                this.gameTable.animateShake(this.elements[actionType + 'Btn']);
+            } else {
+                // Wyłącz akcje do następnej tury
+                this.disableAllActions();
+                
+                logger.game(`Gracz wykonał akcję: ${actionType} ${amount > 0 ? '$' + amount : ''}`);
+            }
         }
     }
     
@@ -585,6 +660,8 @@ class GameUI {
     // Obsługa eventów
     
     handleGameStateUpdate(gameState) {
+        console.log('🎮 [GameUI] Otrzymano stan gry:', gameState);
+        
         // Przekształć dane z serwera na format oczekiwany przez frontend
         if (gameState.players && gameState.bots) {
             // Multiplayer - połącz graczy i boty w jedną tablicę
@@ -613,8 +690,18 @@ class GameUI {
             
             this.updateGameDisplay(frontendGameState);
             
-            // Sprawdź czy można rozpocząć grę
-            this.checkStartGameAvailability(allPlayers.length);
+            console.log('🎮 [GameUI] Faza gry:', gameState.game?.phase);
+            console.log('🎮 [GameUI] Liczba graczy:', allPlayers.length);
+            
+            // Ukryj przycisk startu gdy gra jest aktywna
+            if (gameState.game && gameState.game.phase !== GameConstants.GAME_STATES.WAITING) {
+                console.log('🎮 [GameUI] Ukrywam przycisk startu - gra aktywna');
+                this.hideStartGameButton();
+            } else {
+                console.log('🎮 [GameUI] Sprawdzam dostępność przycisku startu');
+                // Sprawdź czy można rozpocząć grę (tylko w waiting phase)
+                this.checkStartGameAvailability(allPlayers.length);
+            }
         } else {
             // Singleplayer - użyj bezpośrednio
             this.updateGameDisplay(gameState);
@@ -623,11 +710,14 @@ class GameUI {
     
     // Sprawdź czy można rozpocząć grę w multiplayer
     checkStartGameAvailability(playerCount) {
+        console.log('🎮 [GameUI] checkStartGameAvailability - Tryb gry:', this.currentGameMode, 'Graczy:', playerCount);
+        
         if (this.currentGameMode !== 'multiplayer') return;
         
         // Znajdź lub utwórz przycisk startu gry
         let startButton = document.getElementById('start-multiplayer-game');
         if (!startButton) {
+            console.log('🎮 [GameUI] Tworzę przycisk startu gry');
             startButton = this.createStartGameButton();
         }
         
@@ -635,10 +725,20 @@ class GameUI {
             startButton.style.display = 'block';
             startButton.disabled = false;
             startButton.textContent = `Rozpocznij grę (${playerCount} graczy)`;
+            console.log('🎮 [GameUI] Pokazuję aktywny przycisk startu');
         } else {
             startButton.style.display = 'block';
             startButton.disabled = true;
             startButton.textContent = `Oczekiwanie na graczy (${playerCount}/2)`;
+            console.log('🎮 [GameUI] Pokazuję nieaktywny przycisk startu');
+        }
+    }
+    
+    // Ukryj przycisk startu gry (gdy gra jest aktywna)
+    hideStartGameButton() {
+        const startButton = document.getElementById('start-multiplayer-game');
+        if (startButton) {
+            startButton.style.display = 'none';
         }
     }
     
