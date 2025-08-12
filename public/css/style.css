@@ -401,9 +401,9 @@ body {
 
 /* Pula */
 .pot-container {
-    position: absolute;
-    top: 80px; /* Pod górnym panelem (60px + margines) */
-    left: 270px; /* Obok panelu bocznego (250px + margines) */
+    position: fixed; /* Zmienione z absolute na fixed żeby było względem okna */
+    top: 120px; /* Pozycja względem góry okna */
+    left: 280px; /* Zaraz po prawej od lewej kolumny (250px + gap + padding) */
     transform: none; /* Usunięte centrowanie */
     text-align: center;
     background: rgba(0, 0, 0, 0.9);

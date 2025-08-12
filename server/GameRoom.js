@@ -13,11 +13,11 @@ class GameRoom {
         // Gracze i boty
         this.players = new Map(); // playerId -> player object
         this.bots = new Map(); // botId -> bot object
-        this.seats = new Array(Constants.MAX_PLAYERS).fill(null); // seatIndex -> playerId
+        this.seats = new Array(GameConstants.GAME_SETTINGS.MAX_PLAYERS).fill(null); // seatIndex -> playerId
         
         // Stan gry
         this.gameState = {
-            phase: Constants.GAME_PHASES.WAITING,
+            phase: GameConstants.GAME_STATES.WAITING,
             isActive: false,
             handNumber: 0,
             pot: 0,
@@ -225,7 +225,7 @@ class GameRoom {
     startNewHand() {
         // Reset stanu gry
         this.gameState.isActive = true;
-        this.gameState.phase = Constants.GAME_PHASES.PREFLOP;
+        this.gameState.phase = GameConstants.GAME_STATES.PREFLOP;
         this.gameState.handNumber++;
         this.gameState.pot = 0;
         this.gameState.communityCards = [];
@@ -387,23 +387,23 @@ class GameRoom {
         const callAmount = this.gameState.currentBet - player.currentBet;
         
         switch (action) {
-            case Constants.ACTIONS.FOLD:
+            case GameConstants.ACTIONS.FOLD:
                 return { success: true, amount: 0 };
                 
-            case Constants.ACTIONS.CHECK:
+            case GameConstants.ACTIONS.CHECK:
                 if (callAmount > 0) {
                     return { success: false, error: 'Nie możesz sprawdzić - musisz dopłacić lub spasować' };
                 }
                 return { success: true, amount: 0 };
                 
-            case Constants.ACTIONS.CALL:
+            case GameConstants.ACTIONS.CALL:
                 if (callAmount === 0) {
                     return { success: false, error: 'Nie ma nic do dopłacenia' };
                 }
                 const maxCall = Math.min(callAmount, player.chips);
                 return { success: true, amount: maxCall };
                 
-            case Constants.ACTIONS.RAISE:
+            case GameConstants.ACTIONS.RAISE:
                 const minRaise = this.gameState.currentBet + this.gameState.lastRaise;
                 const maxRaise = player.chips + player.currentBet;
                 
@@ -415,7 +415,7 @@ class GameRoom {
                 }
                 return { success: true, amount: amount };
                 
-            case Constants.ACTIONS.ALL_IN:
+            case GameConstants.ACTIONS.ALL_IN:
                 return { success: true, amount: player.chips + player.currentBet };
                 
             default:
@@ -428,24 +428,24 @@ class GameRoom {
         this.clearActionTimer();
         
         switch (action) {
-            case Constants.ACTIONS.FOLD:
+            case GameConstants.ACTIONS.FOLD:
                 player.isFolded = true;
                 player.lastAction = { type: action, amount: 0 };
                 this.log(`${player.name} pasuje`);
                 break;
                 
-            case Constants.ACTIONS.CHECK:
+            case GameConstants.ACTIONS.CHECK:
                 player.lastAction = { type: action, amount: 0 };
                 this.log(`${player.name} sprawdza`);
                 break;
                 
-            case Constants.ACTIONS.CALL:
+            case GameConstants.ACTIONS.CALL:
                 this.placeBet(player.id, amount - player.currentBet);
                 player.lastAction = { type: action, amount: amount };
                 this.log(`${player.name} dopłaca ${amount - player.currentBet}`);
                 break;
                 
-            case Constants.ACTIONS.RAISE:
+            case GameConstants.ACTIONS.RAISE:
                 const raiseAmount = amount - player.currentBet;
                 this.placeBet(player.id, raiseAmount);
                 this.gameState.currentBet = amount;
@@ -454,7 +454,7 @@ class GameRoom {
                 this.log(`${player.name} podbija do ${amount}`);
                 break;
                 
-            case Constants.ACTIONS.ALL_IN:
+            case GameConstants.ACTIONS.ALL_IN:
                 const allInAmount = player.chips;
                 this.placeBet(player.id, allInAmount);
                 player.isAllIn = true;
@@ -498,7 +498,7 @@ class GameRoom {
         const player = this.getPlayer(playerId);
         if (player) {
             player.isFolded = true;
-            player.lastAction = { type: Constants.ACTIONS.FOLD, amount: 0 };
+            player.lastAction = { type: GameConstants.ACTIONS.FOLD, amount: 0 };
             
             if (reason) {
                 this.log(`${player.name} pasuje (${reason})`);
@@ -537,23 +537,23 @@ class GameRoom {
         this.resetCurrentBets();
         
         switch (this.gameState.phase) {
-            case Constants.GAME_PHASES.PREFLOP:
-                this.gameState.phase = Constants.GAME_PHASES.FLOP;
+            case GameConstants.GAME_STATES.PREFLOP:
+                this.gameState.phase = GameConstants.GAME_STATES.FLOP;
                 this.dealFlop();
                 break;
                 
-            case Constants.GAME_PHASES.FLOP:
-                this.gameState.phase = Constants.GAME_PHASES.TURN;
+            case GameConstants.GAME_STATES.FLOP:
+                this.gameState.phase = GameConstants.GAME_STATES.TURN;
                 this.dealTurn();
                 break;
                 
-            case Constants.GAME_PHASES.TURN:
-                this.gameState.phase = Constants.GAME_PHASES.RIVER;
+            case GameConstants.GAME_STATES.TURN:
+                this.gameState.phase = GameConstants.GAME_STATES.RIVER;
                 this.dealRiver();
                 break;
                 
-            case Constants.GAME_PHASES.RIVER:
-                this.gameState.phase = Constants.GAME_PHASES.SHOWDOWN;
+            case GameConstants.GAME_STATES.RIVER:
+                this.gameState.phase = GameConstants.GAME_STATES.SHOWDOWN;
                 this.handleShowdown();
                 return; // Showdown nie ma kolejnych akcji
         }
@@ -748,7 +748,7 @@ class GameRoom {
         this.clearAutoStartTimer();
         
         this.gameState.isActive = false;
-        this.gameState.phase = Constants.GAME_PHASES.WAITING;
+        this.gameState.phase = GameConstants.GAME_STATES.WAITING;
         
         this.log(`🏁 Gra zakończona: ${reason}`);
         this.updateLastActivity();
@@ -788,9 +788,9 @@ class GameRoom {
         // Auto-fold lub auto-check
         const callAmount = this.gameState.currentBet - player.currentBet;
         if (callAmount === 0) {
-            this.processPlayerAction(this.gameState.activePlayer, Constants.ACTIONS.CHECK);
+            this.processPlayerAction(this.gameState.activePlayer, GameConstants.ACTIONS.CHECK);
         } else {
-            this.processPlayerAction(this.gameState.activePlayer, Constants.ACTIONS.FOLD);
+            this.processPlayerAction(this.gameState.activePlayer, GameConstants.ACTIONS.FOLD);
         }
         
         this.log(`⏱️ ${player.name} timeout - automatyczna akcja`);
@@ -839,19 +839,19 @@ class GameRoom {
         let action, amount = 0;
         
         if (callAmount === 0) {
-            action = Math.random() < 0.7 ? Constants.ACTIONS.CHECK : Constants.ACTIONS.RAISE;
-            if (action === Constants.ACTIONS.RAISE) {
+            action = Math.random() < 0.7 ? GameConstants.ACTIONS.CHECK : GameConstants.ACTIONS.RAISE;
+            if (action === GameConstants.ACTIONS.RAISE) {
                 amount = this.gameState.currentBet + this.config.bigBlind;
             }
         } else {
             const random = Math.random();
             if (random < 0.5) {
-                action = Constants.ACTIONS.FOLD;
+                action = GameConstants.ACTIONS.FOLD;
             } else if (random < 0.8) {
-                action = Constants.ACTIONS.CALL;
+                action = GameConstants.ACTIONS.CALL;
                 amount = callAmount;
             } else {
-                action = Constants.ACTIONS.RAISE;
+                action = GameConstants.ACTIONS.RAISE;
                 amount = this.gameState.currentBet + this.config.bigBlind;
             }
         }
